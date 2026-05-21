@@ -40,19 +40,19 @@ keywords = [
     "simptomi gripa",
     "prehlada",
     "simptomi prehlade",
-    # Simptomi
+    # Symptoms
     "temperatura i bolovi",
     "kašalj",
     "bol u grlu",
     "curenje nosa",
-    # Lečenje
+    # Treatment
     "lek za grip",
     "sirup za kašalj",
     "čaj za grip",
-    # Prevencija
+    # Prevention
     "vakcina protiv gripa",
     "vitamin c",
-    # Negativne kontrole
+    # Controls
     "tenis",
     "vreme sutra",
     "recept za kolač",
@@ -168,7 +168,7 @@ def _scale_window(
 
 
 def get_weekly_trends(keyword: str) -> pd.Series:
-    """Preuzima i spaja sve vremenske prozore za zadatu ključnu reč."""
+    """Retrieves and merges all time windows for the specified keyword."""
     windows = _build_time_windows(start_year, end_year, WINDOW_YEARS, OVERLAP_WEEKS)
     combined = pd.Series(dtype="float64")
 
@@ -183,18 +183,22 @@ def get_weekly_trends(keyword: str) -> pd.Series:
                 break
             except Exception as error:
                 last_error = error
-                log_message(f"Upozorenje: greška za {keyword} ({timeframe}), pokušaj {attempt}: {error}")
+                log_message(
+                    f"Upozorenje: greška za {keyword} ({timeframe}), pokušaj {attempt}: {error}"
+                )
                 if "429" in str(error):
                     log_message("Blokada (429) – čeka se i resetuje sesija...")
                     time.sleep(COOLDOWN_429 + random.uniform(10, 164))
                 else:
                     time.sleep(REQUEST_DELAY + random.uniform(-5, 87))
         else:
-            log_message(f"Preskačem interval {timeframe} zbog ponovljenih grešaka: {last_error}")
+            log_message(
+                f"Skipping interval {timeframe} due to repeated errors: {last_error}"
+            )
             continue
 
         if window_series.empty:
-            log_message(f"Prazni podaci za {keyword} ({timeframe})")
+            log_message(f"Empty data {keyword} ({timeframe})")
             time.sleep(REQUEST_DELAY + random.uniform(-5, 38))
             continue
 
@@ -206,7 +210,9 @@ def get_weekly_trends(keyword: str) -> pd.Series:
                 combined = pd.concat([combined, adjusted])
 
         time.sleep(REQUEST_DELAY + random.uniform(-10, 26))
-        time.sleep(random.uniform(5, 15))  # dodatna kratka pauza
+        time.sleep(
+            random.uniform(5, 15)
+        )  # additional random delay to mimic human behavior
 
     combined = combined.sort_index()
     combined.name = "trend_value"
@@ -217,17 +223,17 @@ def get_weekly_trends(keyword: str) -> pd.Series:
 # MAIN EXECUTION
 # =====================================================
 
-log_message("===== POKRETANJE GOOGLE TRENDS ANALIZE (UTF-8, ASCII SAFE) =====")
+log_message("===== STARTING GOOGLE TRENDS ANALYSIS (UTF-8, ASCII SAFE) =====")
 log_message(f"Konfigurisani tz ofset: {TZ_OFFSET_MINUTES} minuta")
 RAW_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 all_trends: Dict[str, pd.DataFrame] = {}
 
 for kw in keywords:
-    log_message(f"\n=== Preuzimam podatke za: {kw} ===")
+    log_message(f"\n=== Retreiving data for: {kw} ===")
     series_kw = get_weekly_trends(kw)
     if series_kw.empty:
-        log_message(f"Nema dostupnih podataka za {kw}, preskačem.")
+        log_message(f"No available data for {kw}, skipping.")
         continue
 
     df_kw = series_kw.to_frame().reset_index().rename(columns={"index": "date"})
@@ -236,11 +242,13 @@ for kw in keywords:
 
     safe_name = _sanitize_keyword(kw)
     df_kw.to_csv(RAW_EXPORT_DIR / f"partial_{safe_name}.csv", index=False)
-    log_message(f"Snimljen parcijalni fajl za {kw}")
-    time.sleep(REQUEST_DELAY + random.uniform(159, 283))  # duža pauza između ključnih reči
+    log_message(f"Partial file saved for {kw}")
+    time.sleep(
+        REQUEST_DELAY + random.uniform(159, 283)
+    )  # longer delay after each keyword to reduce risk of blocking
 
 if not all_trends:
-    raise SystemExit("Nema podataka za čuvanje.")
+    raise SystemExit("No data to save.")
 
 final_df = pd.concat(all_trends.values(), ignore_index=True)
 
@@ -249,8 +257,14 @@ iso_calendar = final_df["date"].dt.isocalendar()
 final_df["ISO_YEAR"] = iso_calendar.year
 final_df["ISO_WEEK"] = iso_calendar.week
 
-final_df.to_csv(PROJECT_ROOT / "data" / "raw" / "google_trends_serbia_2013_2025.csv", index=False)
-weekly_df = final_df.groupby(["keyword", "ISO_YEAR", "ISO_WEEK"], as_index=False)["trend_value"].mean()
-weekly_df.to_csv(PROCESSED_DATA_DIR / "google_trends_weekly_serbia_2013_2025.csv", index=False)
+final_df.to_csv(
+    PROJECT_ROOT / "data" / "raw" / "google_trends_serbia_2013_2025.csv", index=False
+)
+weekly_df = final_df.groupby(["keyword", "ISO_YEAR", "ISO_WEEK"], as_index=False)[
+    "trend_value"
+].mean()
+weekly_df.to_csv(
+    PROCESSED_DATA_DIR / "google_trends_weekly_serbia_2013_2025.csv", index=False
+)
 
-log_message("Gotovo! Podaci uspešno preuzeti i sačuvani.")
+log_message("Done! Data successfully retrieved and saved.")
