@@ -5,7 +5,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Status](https://img.shields.io/badge/Status-Portfolio%20Project-blue)
 
-Automated Google Trends data extraction and analysis for influenza-related search interest in Serbia. The project is designed as a reproducible digital epidemiology and data science workflow for exploring influenza-related public interest and its potential role as a complementary surveillance signal.
+Automated Google Trends data extraction and analysis for influenza-related search interest in Serbia. This repository is structured as a reproducible digital epidemiology and data science portfolio project exploring whether online search behavior can provide a complementary signal for influenza surveillance.
 
 ## Author
 
@@ -20,23 +20,31 @@ This project demonstrates how Google Trends data can be used as a complementary 
 
 ## Project Overview
 
-This repository contains a Python workflow for collecting, processing, merging, and analyzing Google Trends signals related to influenza in Serbia from 2013 to 2025. The analysis focuses on weekly search activity for influenza-related symptoms, treatment terms, prevention terms, and negative controls, with optional comparison against influenza surveillance data.
+The workflow collects, processes, merges, and analyzes Google Trends signals related to influenza in Serbia from 2013 to 2025. It focuses on weekly search activity for influenza-related symptoms, treatment terms, prevention terms, and negative controls, with optional comparison against influenza surveillance data.
 
-The repository is structured as a public portfolio project with source code, notebooks, raw and processed data, generated outputs, and documentation separated into dedicated folders.
+The project is intended for GitHub visitors, data science portfolio reviewers, public health researchers, and academic collaborators interested in reproducible public health analytics.
 
-## Objectives
+## Key Findings
 
-- Extract weekly Google Trends data for influenza-related Serbian search terms.
-- Use overlapping multi-year Google Trends windows to support longer time-series collection.
-- Merge Google Trends signals with weekly influenza surveillance data when available.
-- Evaluate descriptive patterns, correlations, and lagged relationships.
-- Generate summary tables and exploratory figures for public health interpretation.
+Based on the existing generated reports in `outputs/reports/`:
 
-## Methodology
+- Influenza-specific search terms showed the strongest positive correlations with the available influenza indicator `INF_ALL`, especially `virus gripa` (`r = 0.723`), `grip` (`r = 0.720`), and `simptomi gripa` (`r = 0.684`).
+- Broader or less specific terms, such as `prehlada`, `kašalj`, and `bol u grlu`, showed weaker positive correlations.
+- Several terms had limited or missing usable paired observations in the generated correlation report and should not be overinterpreted.
+- Lagged correlation results are exploratory and require validation against official surveillance data before operational use.
 
-The main extraction script queries Google Trends for predefined Serbian influenza-related keywords using `pytrends`. Because Google Trends normalizes results within each request window, the workflow uses overlapping time windows and rescales adjacent windows based on overlap periods. Weekly trend values are then aggregated by ISO year and ISO week.
+These findings describe associations in the existing project outputs only. They should not be interpreted as evidence that Google Trends measures confirmed influenza incidence.
 
-Downstream scripts merge Google Trends data with influenza surveillance data, compute descriptive statistics, Pearson correlations, lagged correlations, and produce exploratory plots. Negative control keywords are included to help contextualize whether observed associations are disease-specific or reflect broader search behavior.
+## Workflow Overview
+
+```mermaid
+flowchart LR
+    A[Google Trends keywords] --> B[Collect weekly trends]
+    B --> C[Process ISO weeks]
+    C --> D[Merge with surveillance data]
+    D --> E[Analyze correlations and lags]
+    E --> F[Generate reports and figures]
+```
 
 ## Repository Structure
 
@@ -52,17 +60,19 @@ influenza-trends-serbia/
 └── docs/
 ```
 
+The current organization already follows the expected structure: source code is in `src/`, notebooks are in `notebooks/`, figures are in `outputs/figures/`, and summary reports are in `outputs/reports/`.
+
 ## Main Scripts
 
-- `src/influenza_gt.py` collects weekly Google Trends data for predefined influenza-related and control keywords in Serbia, using overlapping time windows and overlap-based rescaling.
-- `src/merge_trends_data.py` merges weekly Google Trends data with influenza surveillance data by ISO year and ISO week, producing long and wide analytical datasets.
-- `src/analyze_influenza_trends.py` computes exploratory correlations and generates figures comparing Google Trends signals with influenza indicators.
-- `src/summarize_influenza_trends.py` creates descriptive keyword summaries, keyword-level correlations, and lagged correlation reports.
-- `src/operational_influenza_monitoring.py` explores operational monitoring signals using selected influenza-related keywords and lag analysis.
+- [`src/influenza_gt.py`](src/influenza_gt.py) collects weekly Google Trends data for predefined influenza-related and control keywords in Serbia, using overlapping time windows and overlap-based rescaling.
+- [`src/merge_trends_data.py`](src/merge_trends_data.py) merges weekly Google Trends data with influenza surveillance data by ISO year and ISO week, producing long and wide analytical datasets.
+- [`src/analyze_influenza_trends.py`](src/analyze_influenza_trends.py) computes exploratory correlations and generates figures comparing Google Trends signals with influenza indicators.
+- [`src/summarize_influenza_trends.py`](src/summarize_influenza_trends.py) creates descriptive keyword summaries, keyword-level correlations, and lagged correlation reports.
+- [`src/operational_influenza_monitoring.py`](src/operational_influenza_monitoring.py) explores operational monitoring signals using selected influenza-related keywords and lag analysis.
 
 ## Notebook
 
-- [notebooks/models.ipynb](notebooks/models.ipynb)
+- [`notebooks/influenza_models.ipynb`](notebooks/influenza_models.ipynb)
 
 ## Installation
 
@@ -79,35 +89,35 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-## Usage
+## How to Run
 
 Run commands from the repository root.
 
-Collect Google Trends data:
+1. Collect Google Trends data:
 
 ```bash
 python src/influenza_gt.py
 ```
 
-Merge Google Trends data with influenza surveillance data:
+2. Merge Google Trends data with influenza surveillance data:
 
 ```bash
 python src/merge_trends_data.py
 ```
 
-Generate exploratory correlations and figures:
+3. Generate exploratory correlations and figures:
 
 ```bash
 python src/analyze_influenza_trends.py --no-show
 ```
 
-Create summary tables and lagged correlation outputs:
+4. Create summary tables and lagged correlation outputs:
 
 ```bash
 python src/summarize_influenza_trends.py
 ```
 
-Run operational lag monitoring:
+5. Run operational lag monitoring:
 
 ```bash
 python src/operational_influenza_monitoring.py
@@ -125,17 +135,30 @@ Typical generated outputs include:
 - `outputs/reports/lagged_correlations.csv`
 - `outputs/figures/*.png`
 
-Generated files should be reviewed before publication, especially if they contain surveillance data or derived results that require permission to share.
-
 ## Example Figures
 
-The following example figures are generated outputs already present in `outputs/figures/`:
+The following example figures are generated outputs already present in `outputs/figures/`.
 
 ![Correlation overview](outputs/figures/correlations.png)
 
+*Figure 1. Pearson correlations between available influenza surveillance counts and Google Trends keyword signals.*
+
 ![Google Trends time series for grip](outputs/figures/time_series_grip.png)
 
+*Figure 2. Weekly Google Trends signal for `grip` compared with the available influenza indicator.*
+
 ![Seasonal profile for grip](outputs/figures/seasonality_grip.png)
+
+*Figure 3. Seasonal weekly profile for the `grip` search term across the study period.*
+
+## Reproducibility Notes
+
+- Google Trends data are collected through `pytrends`, an unofficial interface to Google Trends. Repeated requests may produce small differences because Google Trends data are normalized and sampled.
+- The processed Google Trends dataset is stored in `data/processed/google_trends_weekly_serbia_2013_2025.csv`.
+- Merged analytical datasets are generated in `data/processed/` after combining Google Trends data with influenza surveillance data by ISO year and ISO week.
+- Figures and CSV reports are generated outputs and can be recreated from the scripts in `src/`.
+- Surveillance data availability and sharing permissions should be reviewed before publication or reuse.
+- Results are exploratory and should be validated with official surveillance data before being used for public health decision-making.
 
 ## Limitations
 
@@ -163,6 +186,14 @@ This project demonstrates practical skills in:
 - Digital epidemiology
 - Reproducible public health analytics
 
+## Documentation
+
+Additional workflow notes are available in [`docs/README.md`](docs/README.md).
+
+## Citation
+
+Citation metadata are available in [`CITATION.cff`](CITATION.cff).
+
 ## License
 
-This project is released under the MIT License. See [LICENSE](LICENSE) for details.
+This project is released under the MIT License. See [`LICENSE`](LICENSE) for details.

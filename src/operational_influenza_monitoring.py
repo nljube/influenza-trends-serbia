@@ -1,4 +1,11 @@
-"""Operational monitoring of influenza using Google Trends signals."""
+"""Explore operational influenza monitoring signals from Google Trends data.
+
+Inputs:
+    Processed Google Trends CSV and influenza surveillance Excel data.
+Outputs:
+    Console summaries of focus-keyword correlations and lag patterns for the
+    full period and predefined sub-periods.
+"""
 
 from __future__ import annotations
 

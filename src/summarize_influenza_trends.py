@@ -1,4 +1,11 @@
-"""Summarize relationships between influenza cases and Google Trends keywords."""
+"""Summarize Google Trends keyword relationships with influenza indicators.
+
+Inputs:
+    Processed Google Trends CSV and influenza surveillance Excel data.
+Outputs:
+    Keyword summaries, keyword correlations, and lagged correlation CSV reports
+    in outputs/reports/.
+"""
 
 from __future__ import annotations
 import argparse

@@ -1,9 +1,16 @@
+# Core data processing
 pandas
 numpy
+
+# Analysis and modeling
 matplotlib
 scipy
 scikit-learn
 statsmodels
+
+# Data collection and spreadsheet input
 pytrends
 openpyxl
+
+# Notebook workflow
 jupyter

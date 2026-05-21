@@ -1,4 +1,11 @@
-"""Merge Google Trends weekly data with influenza surveillance data for Serbia."""
+"""Merge weekly Google Trends data with influenza surveillance data for Serbia.
+
+Inputs:
+    Processed Google Trends CSV and influenza surveillance Excel data with ISO
+    year and week fields.
+Outputs:
+    Long and wide merged analytical CSV files in data/processed/.
+"""
 
 from __future__ import annotations
 

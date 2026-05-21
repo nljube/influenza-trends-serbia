@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it using the metadata below."
+title: "Influenza Trends Serbia"
+authors:
+  - family-names: "Ljubenović"
+    given-names: "Nenad"
+license: "MIT"
+repository-code: "https://github.com/nljube/influenza-trends-serbia"
+date-released: 2026-05-21

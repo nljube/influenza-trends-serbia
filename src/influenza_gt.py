@@ -1,3 +1,14 @@
+"""Collect weekly Google Trends data for influenza-related searches in Serbia.
+
+Inputs:
+    Predefined Serbian-language keywords, Google Trends geo code RS, and the
+    configured 2013-2025 time window.
+Outputs:
+    Raw per-keyword CSV exports in data/raw/root_exports/, a combined raw CSV in
+    data/raw/, weekly processed trends in data/processed/, and a local run log in
+    outputs/reports/.
+"""
+
 import time
 import random
 import unicodedata

@@ -35,8 +35,11 @@ outputs/reports/*log*
 # Temporary and large local files
 *.tmp
 *.temp
+*.out
+*.err
 *.bak
 *.swp
+*~
 *.zip
 *.tar
 *.tar.gz

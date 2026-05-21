@@ -1,4 +1,10 @@
-"""Analyze relationships between Google Trends and influenza cases in Serbia."""
+"""Analyze exploratory relationships between Google Trends and influenza cases.
+
+Inputs:
+    Processed Google Trends CSV and influenza surveillance Excel data.
+Outputs:
+    Printed correlation summaries and PNG figures in outputs/figures/.
+"""
 
 from __future__ import annotations
 
