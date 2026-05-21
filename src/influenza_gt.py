@@ -30,7 +30,7 @@ PROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "processed"
 REPORT_DIR = PROJECT_ROOT / "outputs" / "reports"
 
 # =====================================================
-# KONFIGURACIJA
+# CONF
 # =====================================================
 
 keywords = [
@@ -64,9 +64,9 @@ end_year = 2025
 
 WINDOW_YEARS = 3
 OVERLAP_WEEKS = 26
-REQUEST_DELAY = 80  # duža osnovna pauza između upita
+REQUEST_DELAY = 80
 MAX_RETRIES = 3
-COOLDOWN_429 = 600  # 10 minuta čekanja kod 429
+COOLDOWN_429 = 600
 LOG_FILE = REPORT_DIR / "trends_log.txt"
 
 
@@ -89,7 +89,7 @@ def _compute_tz_offset_minutes(default: int = 120) -> int:
 TZ_OFFSET_MINUTES = _compute_tz_offset_minutes()
 
 # =====================================================
-# FUNKCIJE
+# FUNCTIONS
 # =====================================================
 
 
@@ -214,7 +214,7 @@ def get_weekly_trends(keyword: str) -> pd.Series:
 
 
 # =====================================================
-# GLAVNI DEO
+# MAIN EXECUTION
 # =====================================================
 
 log_message("===== POKRETANJE GOOGLE TRENDS ANALIZE (UTF-8, ASCII SAFE) =====")
