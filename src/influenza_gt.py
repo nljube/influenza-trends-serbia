@@ -71,7 +71,7 @@ LOG_FILE = REPORT_DIR / "trends_log.txt"
 
 
 def _compute_tz_offset_minutes(default: int = 120) -> int:
-    """Vraća ofset u minutima za Europe/Belgrade ili zadaje podrazumevani."""
+    """Returns the timezone offset in minutes for Europe/Belgrade or uses the default."""
     if ZoneInfo is None:
         return default
     try:
@@ -94,7 +94,7 @@ TZ_OFFSET_MINUTES = _compute_tz_offset_minutes()
 
 
 def log_message(message: str):
-    """Upisuje poruku i u terminal i u log fajl (UTF-8 kompatibilno, bez simbola)."""
+    """Writes a message to both the terminal and the log file (UTF-8 compatible, without symbols)."""
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     text = f"{timestamp} | {message}"
     print(text)
@@ -104,7 +104,7 @@ def log_message(message: str):
 
 
 def _sanitize_keyword(keyword: str) -> str:
-    """Pretvara ključnu reč u stabilno ASCII ime fajla."""
+    """Converts a keyword into a stable ASCII filename."""
     normalized = unicodedata.normalize("NFKD", keyword)
     ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
     cleaned = [ch if ch.isalnum() else "_" for ch in ascii_only.lower()]
@@ -129,7 +129,7 @@ def _build_time_windows(
 
 
 def _fetch_window(pytrends: TrendReq, keyword: str, timeframe: str) -> pd.Series:
-    """Preuzima podatke za jedan vremenski prozor."""
+    """Retrieves data for a single time window."""
     log_message(f"  -> {keyword}: {timeframe}")
     pytrends.build_payload([keyword], geo=country, timeframe=timeframe)
     window = pytrends.interest_over_time()
@@ -184,10 +184,10 @@ def get_weekly_trends(keyword: str) -> pd.Series:
             except Exception as error:
                 last_error = error
                 log_message(
-                    f"Upozorenje: greška za {keyword} ({timeframe}), pokušaj {attempt}: {error}"
+                    f"Warning: error for {keyword} ({timeframe}), attempt {attempt}: {error}"
                 )
                 if "429" in str(error):
-                    log_message("Blokada (429) – čeka se i resetuje sesija...")
+                    log_message("Rate limited (429) - waiting and resetting session...")
                     time.sleep(COOLDOWN_429 + random.uniform(10, 164))
                 else:
                     time.sleep(REQUEST_DELAY + random.uniform(-5, 87))
