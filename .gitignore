@@ -1,0 +1,47 @@
+# Python environments
+.venv/
+venv/
+env/
+
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS/editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+outputs/reports/*log*
+
+# Temporary and large local files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Raw local surveillance exports should be reviewed before publishing.
+data/raw/*.xlsx
+data/raw/*.xls
