@@ -45,6 +45,17 @@ def _safe_corr(series_x: pd.Series, series_y: pd.Series) -> float:
     return series_x.corr(series_y)
 
 
+def _safe_pearsonr(series_x: pd.Series, series_y: pd.Series) -> tuple[float, float]:
+    """Return Pearson r and p-value, guarding against undefined inputs."""
+    if (
+        len(series_x) < 2
+        or series_x.nunique(dropna=True) < 2
+        or series_y.nunique(dropna=True) < 2
+    ):
+        return float("nan"), float("nan")
+    return pearsonr(series_x, series_y)
+
+
 def compute_keyword_correlations(df: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
     """Compute Pearson correlations (r, p) of keywords vs. INF_ALL."""
     results = []
@@ -52,7 +63,7 @@ def compute_keyword_correlations(df: pd.DataFrame, keywords: list[str]) -> pd.Da
         pair = df[[kw, "INF_ALL"]].dropna()
         if pair.empty:
             continue
-        r, p = pearsonr(pair[kw], pair["INF_ALL"])
+        r, p = _safe_pearsonr(pair[kw], pair["INF_ALL"])
         results.append({"keyword": kw, "r": r, "p_value": p, "n": len(pair)})
 
     corr_df = pd.DataFrame(results).sort_values("r", ascending=False)

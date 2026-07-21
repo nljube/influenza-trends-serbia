@@ -28,7 +28,7 @@ The project is intended for GitHub visitors, data science portfolio reviewers, p
 
 Based on the existing generated reports in `outputs/reports/`:
 
-- Influenza-specific search terms showed the strongest positive correlations with the available influenza indicator `INF_ALL`, especially `virus gripa` (`r = 0.723`), `grip` (`r = 0.720`), and `simptomi gripa` (`r = 0.684`).
+- Influenza-specific search terms showed the strongest positive correlations with the available influenza indicator `INF_ALL`, especially `grip` (`r = 0.722`), `simptomi gripa` (`r = 0.685`), and `virus gripa` (`r = 0.672`).
 - Broader or less specific terms, such as `prehlada`, `kašalj`, and `bol u grlu`, showed weaker positive correlations.
 - Several terms had limited or missing usable paired observations in the generated correlation report and should not be overinterpreted.
 - Lagged correlation results are exploratory and require validation against official surveillance data before operational use.
@@ -155,6 +155,7 @@ The following example figures are generated outputs already present in `outputs/
 
 - Google Trends data are collected through `pytrends`, an unofficial interface to Google Trends. Repeated requests may produce small differences because Google Trends data are normalized and sampled.
 - The processed Google Trends dataset is stored in `data/processed/google_trends_weekly_serbia.csv`.
+- The default surveillance workbook `data/raw/DataExport_100625.xlsx` is intentionally ignored by Git and must be supplied locally to regenerate merged outputs.
 - Merged analytical datasets are generated in `data/processed/` after combining Google Trends data with influenza surveillance data by ISO year and ISO week.
 - Figures and CSV reports are generated outputs and can be recreated from the scripts in `src/`.
 - Surveillance data availability and sharing permissions should be reviewed before publication or reuse.

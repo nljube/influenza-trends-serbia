@@ -9,17 +9,41 @@ Outputs:
 from __future__ import annotations
 
 import argparse
+import os
+import tempfile
 import unicodedata
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import TYPE_CHECKING, Any, Iterable
 
-import matplotlib.pyplot as plt
 import pandas as pd
 
 from merge_trends_data import DEFAULT_INFLUENZA, DEFAULT_TRENDS, PROJECT_ROOT, merge_datasets
 
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
 
 DEFAULT_SAVE_DIR = PROJECT_ROOT / "outputs" / "figures"
+plt: Any | None = None
+
+
+def _load_pyplot(no_show: bool = False) -> Any:
+    """Load pyplot after selecting a batch-safe backend when requested."""
+    global plt
+    if plt is None:
+        if no_show:
+            mpl_config_dir = Path(tempfile.gettempdir()) / "influenza-trends-matplotlib"
+            mpl_config_dir.mkdir(parents=True, exist_ok=True)
+            os.environ.setdefault("MPLCONFIGDIR", str(mpl_config_dir))
+
+            import matplotlib
+
+            matplotlib.use("Agg", force=True)
+        import matplotlib.pyplot as pyplot
+
+        plt = pyplot
+    return plt
 
 
 def _normalise(text: str) -> str:
@@ -61,8 +85,9 @@ def compute_correlations(merged_wide: pd.DataFrame, target: str = "INF_ALL") -> 
 def plot_correlations(
     corr_series: pd.Series,
     top_n: int | None = None,
-) -> Tuple[plt.Figure, plt.Axes] | Tuple[None, None]:
+) -> tuple[Figure, Axes] | tuple[None, None]:
     """Plot a horizontal bar chart of correlations."""
+    pyplot = _load_pyplot()
     corr_series = corr_series.dropna()
     if corr_series.empty:
         return None, None
@@ -70,7 +95,7 @@ def plot_correlations(
     data = corr_series.head(top_n) if top_n else corr_series
     data = data.sort_values()
     fig_height = max(3.0, 0.4 * len(data) + 1.5)
-    fig, ax = plt.subplots(figsize=(8, fig_height))
+    fig, ax = pyplot.subplots(figsize=(8, fig_height))
     ax.barh(data.index, data.values, color="steelblue")
     ax.axvline(0, color="black", linewidth=0.8)
     ax.set_xlabel("Pearson r")
@@ -84,8 +109,9 @@ def plot_trend_vs_cases(
     merged_wide: pd.DataFrame,
     keyword: str,
     rolling_window: int | None = None,
-) -> Tuple[plt.Figure, plt.Axes, plt.Axes] | Tuple[None, None, None]:
+) -> tuple[Figure, Axes, Axes] | tuple[None, None, None]:
     """Plot influenza cases and Google Trends time series for a given keyword."""
+    pyplot = _load_pyplot()
     column = _match_column(merged_wide.columns, keyword)
     if column is None:
         print(f"Keyword '{keyword}' not found in merged dataset.")
@@ -98,7 +124,7 @@ def plot_trend_vs_cases(
         series["INF_ALL"] = series["INF_ALL"].rolling(rolling_window, min_periods=1).mean()
         series[column] = series[column].rolling(rolling_window, min_periods=1).mean()
 
-    fig, ax_cases = plt.subplots(figsize=(14, 6))
+    fig, ax_cases = pyplot.subplots(figsize=(14, 6))
     ax_cases.plot(series["date"], series["INF_ALL"], color="tab:red", label="INF_ALL")
     ax_cases.set_ylabel("Confirmed cases (INF_ALL)", color="tab:red")
 
@@ -115,8 +141,9 @@ def plot_trend_vs_cases(
 def plot_seasonal_profile(
     trends_long: pd.DataFrame,
     keyword: str,
-) -> Tuple[plt.Figure, plt.Axes] | Tuple[None, None]:
+) -> tuple[Figure, Axes] | tuple[None, None]:
     """Plot mean weekly profile (with interquartile range) for a keyword."""
+    pyplot = _load_pyplot()
     mask = trends_long["keyword"].apply(lambda value: _normalise(value) == _normalise(keyword))
     subset = trends_long.loc[mask].copy()
     if subset.empty:
@@ -132,7 +159,7 @@ def plot_seasonal_profile(
     q75 = grouped.quantile(0.75)
 
     weeks = mean.index
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = pyplot.subplots(figsize=(10, 5))
     ax.fill_between(weeks, q25, q75, color="skyblue", alpha=0.3, label="Interquartile range (25-75)")
     ax.plot(weeks, mean, color="navy", linewidth=2, label="Weekly mean")
 
@@ -186,6 +213,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    pyplot = _load_pyplot(no_show=args.no_show)
 
     result = merge_datasets(args.trends, args.influenza, args.keywords)
     correlations = compute_correlations(result.merged_wide)
@@ -209,7 +237,7 @@ def main() -> None:
             fig_corr.savefig(output_path, dpi=150)
             print(f"Saved figure: {output_path}")
         if args.no_show:
-            plt.close(fig_corr)
+            pyplot.close(fig_corr)
         else:
             figures_to_show.append(fig_corr)
 
@@ -233,7 +261,7 @@ def main() -> None:
                 fig_ts.savefig(ts_path, dpi=150)
                 print(f"Saved figure: {ts_path}")
             if args.no_show:
-                plt.close(fig_ts)
+                pyplot.close(fig_ts)
             else:
                 figures_to_show.append(fig_ts)
 
@@ -245,12 +273,12 @@ def main() -> None:
                 fig_season.savefig(season_path, dpi=150)
                 print(f"Saved figure: {season_path}")
             if args.no_show:
-                plt.close(fig_season)
+                pyplot.close(fig_season)
             else:
                 figures_to_show.append(fig_season)
 
     if figures_to_show and not args.no_show:
-        plt.show()
+        pyplot.show()
 
 
 if __name__ == "__main__":
