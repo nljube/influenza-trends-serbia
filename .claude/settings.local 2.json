@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"[s]ummarize_influenza\")",
+      "Bash(python3 -c \"import openpyxl, scipy; print\\('openpyxl', openpyxl.__version__, 'scipy', scipy.__version__\\)\")",
+      "Bash(python3 -c \"import openpyxl; print\\('openpyxl', openpyxl.__version__\\)\")",
+      "Bash(python3 -c \"import scipy; print\\('scipy', scipy.__version__\\)\")",
+      "Bash(python3 /private/tmp/claude-501/-Users-nenadljubenovic-Desktop-influenza-trends-serbia/7f972393-909e-4c53-97be-9887845ee927/scratchpad/regen_lag.py)",
+      "Bash(python3 operational_influenza_monitoring.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(time .venv/bin/python -c \"import pandas, scipy, openpyxl; print\\('venv OK', pandas.__version__, scipy.__version__\\)\")",
+      "Bash(git mv *)",
+      "Bash(.venv/bin/python -)",
+      "Bash(../.venv/bin/python merge_trends_data.py)",
+      "Bash(../.venv/bin/python summarize_influenza_trends.py)",
+      "Bash(.venv/bin/python src/operational_influenza_monitoring.py)",
+      "Bash(.venv/bin/python -m py_compile src/influenza_gt.py src/merge_trends_data.py src/summarize_influenza_trends.py src/operational_influenza_monitoring.py)",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
