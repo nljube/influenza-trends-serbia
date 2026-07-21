@@ -21,7 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DATA_DIR = PROJECT_ROOT / "data" / "raw"
 PROCESSED_DATA_DIR = PROJECT_ROOT / "data" / "processed"
 
-DEFAULT_TRENDS = PROCESSED_DATA_DIR / "google_trends_weekly_serbia_2013_2025.csv"
+DEFAULT_TRENDS = PROCESSED_DATA_DIR / "google_trends_weekly_serbia.csv"
 DEFAULT_INFLUENZA = RAW_DATA_DIR / "DataExport_100625.xlsx"
 DEFAULT_OUTPUT_LONG = PROCESSED_DATA_DIR / "merged_trends_influenza_long.csv"
 DEFAULT_OUTPUT_WIDE = PROCESSED_DATA_DIR / "merged_trends_influenza_wide.csv"

@@ -2,7 +2,7 @@
 
 Inputs:
     Predefined Serbian-language keywords, Google Trends geo code RS, and the
-    configured 2013-2025 time window.
+    configured 2013-2026 time window.
 Outputs:
     Raw per-keyword CSV exports in data/raw/root_exports/, a combined raw CSV in
     data/raw/, weekly processed trends in data/processed/, and a local run log in
@@ -60,7 +60,7 @@ keywords = [
 
 country = "RS"
 start_year = 2013
-end_year = 2025
+end_year = 2026  # inclusive; covers through the 2025-2026 season
 
 WINDOW_YEARS = 3
 OVERLAP_WEEKS = 26
@@ -116,7 +116,9 @@ def _build_time_windows(
     start_year: int, end_year: int, window_years: int, overlap_weeks: int
 ) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
     start = pd.Timestamp(f"{start_year}-01-01")
-    end = pd.Timestamp(f"{end_year}-01-01")
+    # end_year is inclusive: reach through the end of end_year. Google Trends
+    # clamps a future end date to the latest available week.
+    end = pd.Timestamp(f"{end_year + 1}-01-01")
     windows: List[Tuple[pd.Timestamp, pd.Timestamp]] = []
     current_start = start
     while current_start < end:
@@ -143,7 +145,7 @@ def _fetch_window(pytrends: TrendReq, keyword: str, timeframe: str) -> pd.Series
 def _scale_window(
     accumulated: pd.Series, new_window: pd.Series
 ) -> Tuple[pd.Series, float]:
-    """Skalira novi prozor prema prethodnom, na osnovu preklapanja."""
+    """Scale the new window to the previous one based on their overlap."""
     overlap_index = accumulated.index.intersection(new_window.index)
     if overlap_index.empty:
         return new_window, 1.0
@@ -224,13 +226,13 @@ def get_weekly_trends(keyword: str) -> pd.Series:
 # =====================================================
 
 log_message("===== STARTING GOOGLE TRENDS ANALYSIS (UTF-8, ASCII SAFE) =====")
-log_message(f"Konfigurisani tz ofset: {TZ_OFFSET_MINUTES} minuta")
+log_message(f"Configured tz offset: {TZ_OFFSET_MINUTES} minutes")
 RAW_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 all_trends: Dict[str, pd.DataFrame] = {}
 
 for kw in keywords:
-    log_message(f"\n=== Retreiving data for: {kw} ===")
+    log_message(f"\n=== Retrieving data for: {kw} ===")
     series_kw = get_weekly_trends(kw)
     if series_kw.empty:
         log_message(f"No available data for {kw}, skipping.")
@@ -257,14 +259,20 @@ iso_calendar = final_df["date"].dt.isocalendar()
 final_df["ISO_YEAR"] = iso_calendar.year
 final_df["ISO_WEEK"] = iso_calendar.week
 
+# Drop boundary weeks that spill outside the configured [start_year, end_year]
+# range (Google returns the ISO week straddling each window edge).
+final_df = final_df[
+    (final_df["ISO_YEAR"] >= start_year) & (final_df["ISO_YEAR"] <= end_year)
+].copy()
+
 final_df.to_csv(
-    PROJECT_ROOT / "data" / "raw" / "google_trends_serbia_2013_2025.csv", index=False
+    PROJECT_ROOT / "data" / "raw" / "google_trends_serbia.csv", index=False
 )
 weekly_df = final_df.groupby(["keyword", "ISO_YEAR", "ISO_WEEK"], as_index=False)[
     "trend_value"
 ].mean()
 weekly_df.to_csv(
-    PROCESSED_DATA_DIR / "google_trends_weekly_serbia_2013_2025.csv", index=False
+    PROCESSED_DATA_DIR / "google_trends_weekly_serbia.csv", index=False
 )
 
 log_message("Done! Data successfully retrieved and saved.")

@@ -20,7 +20,7 @@ This project demonstrates how Google Trends data can be used as a complementary 
 
 ## Project Overview
 
-The workflow collects, processes, merges, and analyzes Google Trends signals related to influenza in Serbia from 2013 to 2025. It focuses on weekly search activity for influenza-related symptoms, treatment terms, prevention terms, and negative controls, with optional comparison against influenza surveillance data.
+The workflow collects, processes, merges, and analyzes Google Trends signals related to influenza in Serbia from 2013 to 2026. It focuses on weekly search activity for influenza-related symptoms, treatment terms, prevention terms, and negative controls, with optional comparison against influenza surveillance data.
 
 The project is intended for GitHub visitors, data science portfolio reviewers, public health researchers, and academic collaborators interested in reproducible public health analytics.
 
@@ -127,7 +127,7 @@ python src/operational_influenza_monitoring.py
 
 Typical generated outputs include:
 
-- `data/processed/google_trends_weekly_serbia_2013_2025.csv`
+- `data/processed/google_trends_weekly_serbia.csv`
 - `data/processed/merged_trends_influenza_long.csv`
 - `data/processed/merged_trends_influenza_wide.csv`
 - `outputs/reports/keyword_summary.csv`
@@ -154,7 +154,7 @@ The following example figures are generated outputs already present in `outputs/
 ## Reproducibility Notes
 
 - Google Trends data are collected through `pytrends`, an unofficial interface to Google Trends. Repeated requests may produce small differences because Google Trends data are normalized and sampled.
-- The processed Google Trends dataset is stored in `data/processed/google_trends_weekly_serbia_2013_2025.csv`.
+- The processed Google Trends dataset is stored in `data/processed/google_trends_weekly_serbia.csv`.
 - Merged analytical datasets are generated in `data/processed/` after combining Google Trends data with influenza surveillance data by ISO year and ISO week.
 - Figures and CSV reports are generated outputs and can be recreated from the scripts in `src/`.
 - Surveillance data availability and sharing permissions should be reviewed before publication or reuse.
