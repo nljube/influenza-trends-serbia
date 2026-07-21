@@ -70,23 +70,25 @@ def compute_lagged_correlations(
         return pd.DataFrame(columns=["lag", "correlation"]).set_index("lag")
 
     results: list[tuple[int, float]] = []
-    target_series = df[target]
+    # Use positional numpy arrays so the shift is applied by position; building a
+    # DataFrame from index-carrying Series would realign by label and cancel it.
+    signal_values = signal.to_numpy(dtype="float64")
+    target_values = df[target].to_numpy(dtype="float64")
 
     for lag in range(-max_lag, max_lag + 1):
         if lag > 0:
-            aligned = pd.DataFrame(
-                {"signal": signal.iloc[:-lag], "target": target_series.iloc[lag:]},
-                index=signal.index[:-lag],
-            )
+            shifted_signal = signal_values[:-lag]
+            shifted_target = target_values[lag:]
         elif lag < 0:
-            aligned = pd.DataFrame(
-                {"signal": signal.iloc[-lag:], "target": target_series.iloc[:lag]},
-                index=signal.index[-lag:],
-            )
+            shifted_signal = signal_values[-lag:]
+            shifted_target = target_values[:lag]
         else:
-            aligned = pd.DataFrame({"signal": signal, "target": target_series})
+            shifted_signal = signal_values
+            shifted_target = target_values
 
-        aligned = aligned.dropna()
+        aligned = pd.DataFrame(
+            {"signal": shifted_signal, "target": shifted_target}
+        ).dropna()
         corr = _safe_corr(aligned["signal"], aligned["target"]) if not aligned.empty else float("nan")
         results.append((lag, corr))
 
