@@ -14,7 +14,7 @@ import random
 import unicodedata
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import pandas as pd
 from pytrends.request import TrendReq
@@ -34,28 +34,31 @@ REPORT_DIR = PROJECT_ROOT / "outputs" / "reports"
 # =====================================================
 
 keywords = [
-    # Core
+    # Core (flu-specific)
     "grip",
     "virus gripa",
     "simptomi gripa",
     "prehlada",
     "simptomi prehlade",
-    # Symptoms
-    "temperatura i bolovi",
-    "kašalj",
+    # Symptoms (bez kvačica)
+    "povisena temperatura",
+    "kasalj",
     "bol u grlu",
+    "bol u misicima",
     "curenje nosa",
+    "malaksalost",
+    "bronhitis",
     # Treatment
     "lek za grip",
-    "sirup za kašalj",
-    "čaj za grip",
+    "lek za prehladu",
+    "sirup za kasalj",
+    "caj za grip",
     # Prevention
     "vakcina protiv gripa",
-    "vitamin c",
     # Controls
     "tenis",
     "vreme sutra",
-    "recept za kolač",
+    "recept za kolac",
 ]
 
 country = "RS"
@@ -65,8 +68,9 @@ end_year = 2026  # inclusive; covers through the 2025-2026 season
 WINDOW_YEARS = 3
 OVERLAP_WEEKS = 26
 REQUEST_DELAY = 80
-MAX_RETRIES = 3
-COOLDOWN_429 = 600
+MAX_RETRIES = 5          # retry on both errors AND empty responses (often 429 artefacts)
+COOLDOWN_429 = 600       # base cooldown (s) after a 429 or empty response
+COOLDOWN_MAX = 1800      # cap for the escalating backoff
 LOG_FILE = REPORT_DIR / "trends_log.txt"
 
 
@@ -169,6 +173,46 @@ def _scale_window(
     return adjusted, scale_factor
 
 
+def _fetch_with_retries(keyword: str, timeframe: str) -> pd.Series:
+    """Fetch one window, retrying on errors AND empty responses.
+
+    During throttling Google Trends frequently returns an empty frame instead of
+    a 429 exception. Treating "empty" as retryable (with an escalating cooldown)
+    prevents the silent, permanent gaps a single skipped window would leave.
+    Returns an empty Series only when the data is still unavailable after every
+    attempt (a genuine gap).
+    """
+    cooldown = COOLDOWN_429
+    for attempt in range(1, MAX_RETRIES + 1):
+        window = pd.Series(dtype="float64")
+        error_429 = False
+        try:
+            pytrends = TrendReq(hl="sr", tz=TZ_OFFSET_MINUTES)
+            window = _fetch_window(pytrends, keyword, timeframe)
+        except Exception as error:
+            error_429 = "429" in str(error)
+            log_message(
+                f"Warning: error for {keyword} ({timeframe}), "
+                f"attempt {attempt}/{MAX_RETRIES}: {error}"
+            )
+
+        if not window.empty:
+            return window
+
+        if attempt < MAX_RETRIES:
+            if error_429:
+                wait = cooldown + random.uniform(10, 164)
+                cooldown = min(cooldown * 1.6, COOLDOWN_MAX)
+                log_message(f"Rate limited (429) - cooling down {wait:.0f}s, then retry...")
+            else:
+                wait = cooldown + random.uniform(10, 120)
+                cooldown = min(cooldown * 1.4, COOLDOWN_MAX)
+                log_message(f"Empty response - cooling down {wait:.0f}s, then retry...")
+            time.sleep(wait)
+
+    return pd.Series(dtype="float64")
+
+
 def get_weekly_trends(keyword: str) -> pd.Series:
     """Retrieves and merges all time windows for the specified keyword."""
     windows = _build_time_windows(start_year, end_year, WINDOW_YEARS, OVERLAP_WEEKS)
@@ -176,31 +220,12 @@ def get_weekly_trends(keyword: str) -> pd.Series:
 
     for start_ts, end_ts in windows:
         timeframe = f"{start_ts.date()} {end_ts.date()}"
-        last_error: Optional[Exception] = None
-
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                pytrends = TrendReq(hl="sr", tz=TZ_OFFSET_MINUTES)
-                window_series = _fetch_window(pytrends, keyword, timeframe)
-                break
-            except Exception as error:
-                last_error = error
-                log_message(
-                    f"Warning: error for {keyword} ({timeframe}), attempt {attempt}: {error}"
-                )
-                if "429" in str(error):
-                    log_message("Rate limited (429) - waiting and resetting session...")
-                    time.sleep(COOLDOWN_429 + random.uniform(10, 164))
-                else:
-                    time.sleep(REQUEST_DELAY + random.uniform(-5, 87))
-        else:
-            log_message(
-                f"Skipping interval {timeframe} due to repeated errors: {last_error}"
-            )
-            continue
+        window_series = _fetch_with_retries(keyword, timeframe)
 
         if window_series.empty:
-            log_message(f"Empty data {keyword} ({timeframe})")
+            log_message(
+                f"GAP: no data for {keyword} ({timeframe}) after {MAX_RETRIES} attempts"
+            )
             time.sleep(REQUEST_DELAY + random.uniform(-5, 38))
             continue
 
@@ -212,9 +237,7 @@ def get_weekly_trends(keyword: str) -> pd.Series:
                 combined = pd.concat([combined, adjusted])
 
         time.sleep(REQUEST_DELAY + random.uniform(-10, 26))
-        time.sleep(
-            random.uniform(5, 15)
-        )  # additional random delay to mimic human behavior
+        time.sleep(random.uniform(5, 15))  # extra jitter to mimic human behaviour
 
     combined = combined.sort_index()
     combined.name = "trend_value"
@@ -248,6 +271,16 @@ for kw in keywords:
     time.sleep(
         REQUEST_DELAY + random.uniform(159, 283)
     )  # longer delay after each keyword to reduce risk of blocking
+
+# Coverage summary: flag any keyword with far fewer weeks than the best-covered one,
+# so gaps (e.g. from throttling) are visible immediately rather than discovered later.
+if all_trends:
+    counts = {kw: len(df_kw) for kw, df_kw in all_trends.items()}
+    best = max(counts.values())
+    log_message("----- COVERAGE SUMMARY -----")
+    for kw, n in sorted(counts.items(), key=lambda item: item[1]):
+        flag = "  <-- LOW / possible gaps" if n < 0.75 * best else ""
+        log_message(f"  {kw}: {n} weeks{flag}")
 
 if not all_trends:
     raise SystemExit("No data to save.")
